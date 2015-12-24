@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # This file is used to ignore files which are generated
 # ----------------------------------------------------------------------------
 
@@ -71,3 +72,10 @@ Thumbs.db
 *.exe
 
 
+=======
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+install_manifest.txt
+>>>>>>> 2d19d9c4748eb945ddea22ae036baa3be0020ed7
