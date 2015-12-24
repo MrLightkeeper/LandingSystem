@@ -749,6 +749,7 @@ int main(int argc, char* argv[])
         start:
         clock_t start = clock();
 
+
         if (mode == 1) //ОНХЯЙ ОН ЯБЕРНДХНДЮЛ
         {
                 while(true)
