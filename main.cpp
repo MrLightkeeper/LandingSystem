@@ -753,12 +753,13 @@ int main(int argc, char* argv[])
         {
                 while(true)
                 {
-                        // ОНКСВЮЕЛ ЙЮДП
+
+                    // ОНКСВЮЕЛ ЙЮДП
                //         image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
                //         VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
                         image = cvRetrieveFrame( capture );
 
-                       // assert( image !=0 );
+                        assert( image !=0 );
                         normalized = cvCloneImage( image);
                         clock_t begin = clock();
 
