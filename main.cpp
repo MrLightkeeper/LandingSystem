@@ -3,9 +3,11 @@
 //
 
 //#include "stdafx.h"
-#include <opencv.hpp>
-#include <highgui.hpp>
-#include <imgproc.hpp>
+#include <opencv2/opencv.hpp>
+#include <opencv2/core/core.hpp>
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctime>
@@ -13,7 +15,7 @@
 #include <math.h>
 #include <iostream>
 //#include <videoInput.h>
-using namespace cv;
+
 
 
 
@@ -24,6 +26,7 @@ using namespace cv;
 
 
 using namespace std;
+using namespace cv;
 
 
 IplImage* image = 0;
@@ -96,6 +99,7 @@ int numOfPoints = cir_point_num;
         int pnum2;
     };
     struct Grp{
+
         Obj obj[100]; //нАЗЕЙРШ ЦПСООШ
         int numb; //мНЛЕП ЦПСООШ
         int size; //пЮГЛЕП ЦПСООШ
@@ -104,6 +108,7 @@ int numOfPoints = cir_point_num;
     Obj object[200];
 
 int mode = 0; //пЕФХЛ ОНХЯЙЮ НАЗЕЙРНБ
+
 #define LED_PAD		1;
 #define WHITE_SQ	2;
 
@@ -465,7 +470,8 @@ void findCenter(IplImage* _image, IplImage* _bin, int point_num, CvPoint center)
         cvCvtColor(_bin, centered, CV_GRAY2RGB);
 
         data = (unsigned char*)(_bin->imageData);
-        CvMat *mat = cvCreateMat(_bin->height,_bin->width,CV_8UC1 );
+        //CvMat *mat = cvCreateMat(_bin->height,_bin->width,CV_8UC1 );
+        CvMat *mat = cvCreateMat(_image->height,_image->width,CV_8UC1 );
         cvSetData(mat,data,_bin->width);
         int J=0, I=0, count=0;
         int xc,yc;
@@ -700,34 +706,19 @@ void hsvConvert(IplImage* _image, IplImage* dst, bool _manual, char _color){ //�
 }
 
 
-int main(int argc, char* argv[])
+int main()
 {
+        CvCapture *capture = cvCaptureFromCAM(0);
+        if( !capture ) return 1;
 
-  //      // ОНКСВЮЕЛ КЧАСЧ ОНДЙКЧВ╦ММСЧ ЙЮЛЕПС
-        CvCapture* capture = cvCreateCameraCapture(CV_CAP_ANY); //cvCaptureFromCAM( 0 );
-        assert( capture );
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 1024);//1280);
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 768);//960);
-  //      // СГМЮЕЛ ЬХПХМС Х БШЯНРС ЙЮДПЮ
-  //      double width = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
-  //      double height = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
-  //      printf("[i] %.0f x %.0f\n", width, height );
+        //CvCapture *capture = cvCreateCameraCapture(0);
+        // VideoCapture capture(0);
+        //if (!capture.isOpened()) {
+        //     std::cout << "Unable to read stream from specified device." << std::endl;
+        //    return -1;
+        // }else std::cout << "Stream opened" << std::endl;
 
-   //     videoInput VI;
-         // ОНКСВЕМХЕ ЯОХЯЙЮ ДНЯРСОМШУ БХДЕНСЯРПНИЯРБ, БНГБПЮЫЮЕРЯЪ ВХЯКН СЯРПНИЯРБ
- //       int numDevices = VI.listDevices();
-  //      int device1=0; // ОЕПБНЕ МЮИДЕМНЕ БХДЕНСЯРПНИЯБН ХГ ЯОХЯЙЮ
-
-        // ВЮЯРНРЮ ЙЮДПНБ
-  //      VI.setIdealFramerate(device1, 30);
-
-        // СЙЮГШБЮЕЛ ПЮГПЕЬЕМХЕ
- //       VI.setupDevice(device1, 1024, 768, VI_COMPOSITE);
-
-        //VI.showSettingsWindow(device1); // ОНЙЮГЮРЭ НЙНЬЙН МЮЯРПНЕЙ ЙЮЛЕПШ-opencv
-
-
-        IplImage* frame=0;
+        Mat frame;
 
         //ДКЪ ОНХЯЙЮ ЯПЕДМЕЦН ОНКНФЕМХЪ ОКНЫЮДЙХ
         CvPoint avCenter;
@@ -739,7 +730,6 @@ int main(int argc, char* argv[])
 
         printf("[i] press Esc for quit!\n\n");
 
-        int counter=0;
         bool flManHSV = false;
         bool flManMode = 1;
 
@@ -749,19 +739,17 @@ int main(int argc, char* argv[])
         start:
         clock_t start = clock();
 
-
         if (mode == 1) //ОНХЯЙ ОН ЯБЕРНДХНДЮЛ
         {
                 while(true)
                 {
 
-                    // ОНКСВЮЕЛ ЙЮДП
-               //         image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
-               //         VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
-                        image = cvRetrieveFrame( capture );
-
+                        IplImage *image = cvQueryFrame(capture);
                         assert( image !=0 );
                         normalized = cvCloneImage( image);
+                        //normalized = cvCreateImage(cvSize(1024,780), IPL_DEPTH_8U,1);
+
+
                         clock_t begin = clock();
 
                         //ТХКЭРПЮЖХЪ
@@ -777,7 +765,7 @@ int main(int argc, char* argv[])
                         //cvAdd(hsvConvert(normalized, false, 'r'), hsvConvert(normalized, false, 'b'), binarized_1);
                         hsvConvert(normalized, binarized_1, flManHSV, 'd');
 
-                        cvNamedWindow( "Bin", 1 );
+                        cvNamedWindow("Bin");
                         cvShowImage("Bin", binarized_1);
 
 
@@ -842,12 +830,12 @@ int main(int argc, char* argv[])
                         cvShowImage("With Center",centered);
 
 
-                        cvReleaseImage(& normalized);
-                        cvReleaseImage(& binarized_1);
-                        cvReleaseImage(& centered);
-                        cvReleaseImage(& filtered);
-                        cvReleaseImage(& contours);
-                        cvReleaseImage(& image);
+                        cvReleaseImageHeader(& normalized);
+                        cvReleaseImageHeader(& binarized_1);
+                        cvReleaseImageHeader(& centered);
+                        cvReleaseImageHeader(& filtered);
+                        cvReleaseImageHeader(& contours);
+                        cvReleaseImageHeader(& image);
 
 
                         char c = cvWaitKey(33);
@@ -876,15 +864,18 @@ int main(int argc, char* argv[])
         cvDestroyWindow("normalized");
         }
         else if (mode == 2) //ОНХЯЙ ОН ЙБЮДПЮРС
+
         {
                 while(true)
                 {
                         // ОНКСВЮЕЛ ЙЮДП
-                        image = cvRetrieveFrame( capture );
-                  //      image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
-                 //       VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
+                    IplImage* image = cvQueryFrame( capture );
+                    //capture >> frame;
+                    //image->imageData = (char *)frame.data;
+                       //image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
+                       //VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
 
-                        assert( image !=0 );
+                        //assert( image !=0 );
                         normalized = cvCloneImage( image);
                         clock_t begin = clock();
 
@@ -980,7 +971,7 @@ int main(int argc, char* argv[])
                         }
                 }
                 // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
-                cvReleaseCapture( &capture );
+                //cvReleaseCapture( &capture );
                 //VI.stopDevice(device1);
                 // СДЮКЪЕЛ НЙМН
                 cvDestroyWindow("resized");
@@ -994,7 +985,9 @@ int main(int argc, char* argv[])
                         // ОНКСВЮЕЛ ЙЮДП
                         //image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
                        // VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
-                        image = cvRetrieveFrame( capture );
+                    //IplImage* frame = cvQueryFrame( capture );
+                    //capture >> frame;
+                    image->imageData = (char *)frame.data;
 
                         assert( image !=0 );
                         normalized = cvCloneImage( image);
@@ -1083,7 +1076,7 @@ int main(int argc, char* argv[])
                 }
 
         // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
-        cvReleaseCapture( &capture );
+        //cvReleaseCapture( &capture );
                 //VI.stopDevice(device1);
         // СДЮКЪЕЛ НЙМН
         cvDestroyWindow("resized");
