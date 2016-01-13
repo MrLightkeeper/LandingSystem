@@ -1,6 +1,4 @@
 
-// CV_Image_Test.cpp : Defines the entry point for the console application.
-//
 
 //#include "stdafx.h"
 #include <opencv2/opencv.hpp>
@@ -14,6 +12,8 @@
 #include <vector>
 #include <math.h>
 #include <iostream>
+
+#include <sys/time.h>
 //#include <videoInput.h>
 
 
@@ -330,9 +330,9 @@ void findSquare(IplImage* _image,IplImage* _target , IplImage* _color)
         //CvMemStorage* storage_l = cvCreateMemStorage(0);
   //      CvSeq* lines = 0;
   //      int i = 0;
-        ////IplImage* color_dst = cvCreateImage( cvGetSize(src), 8, 3 );
+        //IplImage* color_dst = cvCreateImage( cvGetSize(src), 8, 3 );
         //lines = cvHoughLines2( bin, storage, CV_HOUGH_PROBABILISTIC, 1, CV_PI/180, 50, 50, 10 );
-        //// МЮПХЯСЕЛ МЮИДЕММШЕ КХМХХ
+        // МЮПХЯСЕЛ МЮИДЕММШЕ КХМХХ
   //      for( i = 0; i < lines->total; i++ ){
   //              CvPoint* line = (CvPoint*)cvGetSeqElem(lines,i);
   //              cvLine( centered, line[0], line[1], CV_RGB(255,0,0), 3, CV_AA, 0 );
@@ -384,10 +384,8 @@ void findSquare(IplImage* _image,IplImage* _target , IplImage* _color)
                                 // БШБНДХЛ ЕЦН МНЛЕП
                                 //CvPoint2D32f point; float rad;
                                 //cvMinEnclosingCircle(current,&point,&rad); // ОНКСВХЛ НЙПСФМНЯРЭ ЯНДЕПФЮЫСЧ ЙНМРСП
-                           //     cvPutText(_target, _itoa(++counter, buf, 10), cvPointFrom32f(center), &font, CV_RGB(255,255,255));
-
-
-
+                                sprintf(buf, "%i", ++counter);
+                                cvPutText(_target, buf, cvPointFrom32f(center), &font, CV_RGB(255,255,255));
                                 centerMass[counter] = center;
                         }
                 }
@@ -396,7 +394,7 @@ void findSquare(IplImage* _image,IplImage* _target , IplImage* _color)
 
         // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
         cvReleaseMemStorage(&storage);
-        cvReleaseImage(&bin);
+        cvReleaseImageHeader(&bin);
 }
 
 void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
@@ -435,7 +433,7 @@ void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
             double perim = cvContourPerimeter(current);
 
             // 1/4*CV_PI = 0,079577
-            if ( area / (perim * perim) > 0.059 && area / (perim * perim)< 0.087 ){ // Б 10% ХМРЕПБЮКЕ
+            if ( area / (perim * perim) > double(0.059) && area / (perim * perim)< double(0.087) ){ // Б 10% ХМРЕПБЮКЕ
 
                 //нРПХЯНБЙЮ НЙПСФМНЯРЕИ
                 float radius;
@@ -446,13 +444,15 @@ void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
                 cvCircle(_target, cvPoint(center.x,center.y), radius, CV_RGB(255,255,255), 1, 8);
 
                 // МЮПХЯСЕЛ ЙНМРСП
-                if ((area >= 2*2) &&  abs(1 - perim / circArea) <= 0.2)
+                if ((area >= 2*2) &&  abs(1 - perim / circArea) <= double(0.2))
                 {
                     cvDrawContours(_target, current, cvScalar(255, 255, 255), cvScalar(0, 255, 0), 0, -1, 8);
                     // БШБНДХЛ ЕЦН МНЛЕП
                     //CvPoint2D32f point; float rad;
                     //cvMinEnclosingCircle(current,&point,&rad); // ОНКСВХЛ НЙПСФМНЯРЭ ЯНДЕПФЮЫСЧ ЙНМРСП
-              //      cvPutText(_target, _itoa(++counter, buf, 10), cvPointFrom32f(center), &font, CV_RGB(255,255,255));
+                    sprintf(buf, "%i", ++counter);
+                    cvPutText(_target, buf, cvPointFrom32f(center), &font, CV_RGB(255,255,255));
+
                     centerMass[counter] = center;
                 }
             }
@@ -470,13 +470,12 @@ void findCenter(IplImage* _image, IplImage* _bin, int point_num, CvPoint center)
         cvCvtColor(_bin, centered, CV_GRAY2RGB);
 
         data = (unsigned char*)(_bin->imageData);
-        //CvMat *mat = cvCreateMat(_bin->height,_bin->width,CV_8UC1 );
+
         CvMat *mat = cvCreateMat(_image->height,_image->width,CV_8UC1 );
         cvSetData(mat,data,_bin->width);
         int J=0, I=0, count=0;
         int xc,yc;
-        int jnew=0;
-        double Num[2];
+
         int bufimax=0,bufjmax=0,bufimin=(centered->width)+1,bufjmin=(centered->height)+1;
 
         //НРПХЯНБЙЮ ЖЕМРПНБ ЙНМРСПНБ
@@ -708,8 +707,16 @@ void hsvConvert(IplImage* _image, IplImage* dst, bool _manual, char _color){ //�
 
 int main()
 {
-        CvCapture *capture = cvCaptureFromCAM(0);
+        CvCapture *capture = cvCreateCameraCapture(0);
         if( !capture ) return 1;
+
+        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 1024);
+        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 768);
+
+        double width = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
+        double height = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
+        printf("[i] Resolution %.0f x %.0f\n", width, height);
+
 
         //CvCapture *capture = cvCreateCameraCapture(0);
         // VideoCapture capture(0);
@@ -731,13 +738,18 @@ int main()
         printf("[i] press Esc for quit!\n\n");
 
         bool flManHSV = false;
-        bool flManMode = 1;
+        bool flManMode = 0;
 
         //БШАНП ПЕФХЛЮ ПЮАНРШ
         mode = 1;
 
-        start:
-        clock_t start = clock();
+        timeval startTime;
+        gettimeofday(&startTime, NULL);
+
+        start: //This is for goto()
+
+
+
 
         if (mode == 1) //ОНХЯЙ ОН ЯБЕРНДХНДЮЛ
         {
@@ -747,10 +759,11 @@ int main()
                         IplImage *image = cvQueryFrame(capture);
                         assert( image !=0 );
                         normalized = cvCloneImage( image);
-                        //normalized = cvCreateImage(cvSize(1024,780), IPL_DEPTH_8U,1);
+
+                        timeval beginTime;
+                        gettimeofday(&beginTime, NULL);
 
 
-                        clock_t begin = clock();
 
                         //ТХКЭРПЮЖХЪ
                         cvSmooth(normalized, normalized, CV_GAUSSIAN, 5, 5);
@@ -784,13 +797,17 @@ int main()
 
                         //ЛНДСКЭ НРПХЯНБЙХ ХМТНПЛЮЖХХ
 
-                        clock_t end = clock();
-                        double elapsed_secs = double(end - begin);
+                        timeval endTime;
+                        gettimeofday(&endTime, NULL);
+                        int frameSecTime = endTime.tv_sec - beginTime.tv_sec;
+                        int frameMilliSecTime = endTime.tv_usec / 1000 - beginTime.tv_usec / 1000;
+                        double elapsed_msecs = (frameSecTime * 1000 + frameMilliSecTime);
+
                         CvFont font;
                         cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.0, 2.0);
                         char buf[128];
 
-                        sprintf(buf, "FPS %.2f", 1000/elapsed_secs);
+                        sprintf(buf, "FPS %.2f", 1000 / elapsed_msecs);
                         cvPutText(centered,  buf, cvPoint(5, centered->height - 10), &font, CV_RGB(255,0,0));
 
                         sprintf(buf, "X = %4d", -(centerPad.y - (centered->height)/2));
@@ -798,8 +815,14 @@ int main()
                         sprintf(buf, "Y = %4d", centerPad.x-(centered->width)/2);
                         cvPutText(centered,  buf, cvPoint(centered -> width - 130, centered->height - 10), &font, CV_RGB(0,255,0));
 
-                        clock_t time = clock();
-                        sprintf(buf, "Time %.2f sec", double(time)/1000);
+
+                        timeval currentTime;
+                        gettimeofday(&currentTime, NULL);
+                        int currentSecTime = currentTime.tv_sec - startTime.tv_sec;
+                        int currentMilliSecTime = currentTime.tv_usec / 1000 - startTime.tv_usec / 1000;
+                        double time = (currentSecTime * 1000) + currentMilliSecTime;
+
+                        sprintf(buf, "Time %.2f sec", time / 1000);
 
                         cvPutText(centered,  buf, cvPoint(5, centered->height - 30), &font, CV_RGB(0,255,0));
                         cvPutText(centered,  "Looking for LED", cvPoint(5, 25), &font, CV_RGB(0,255,0));
@@ -825,16 +848,16 @@ int main()
                             cvRectangle(centered, cvPoint(avCenter.x - aoiSize/2,avCenter.y - aoiSize/2), cvPoint(avCenter.x + aoiSize/2,avCenter.y + aoiSize/2),CV_RGB(0,0,250),1,8);
                         }
 
-                        SquareByPoints(centered);
+                        //SquareByPoints(centered);
 
                         cvShowImage("With Center",centered);
 
 
-                        cvReleaseImageHeader(& normalized);
-                        cvReleaseImageHeader(& binarized_1);
-                        cvReleaseImageHeader(& centered);
-                        cvReleaseImageHeader(& filtered);
-                        cvReleaseImageHeader(& contours);
+                        cvReleaseImage(& normalized);
+                        cvReleaseImage(& binarized_1);
+                        cvReleaseImage(& centered);
+                        cvReleaseImage(& filtered);
+                        cvReleaseImage(& contours);
                         cvReleaseImageHeader(& image);
 
 
@@ -856,28 +879,24 @@ int main()
                         }
                 }
 
-        // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
-        cvReleaseCapture( &capture );
-    //            VI.stopDevice(device1);
-        // СДЮКЪЕЛ НЙМН
-        cvDestroyWindow("resized");
-        cvDestroyWindow("normalized");
+                // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
+                cvReleaseCapture( &capture );
+                // СДЮКЪЕЛ НЙМН
+                cvDestroyWindow("With Center");
+                cvDestroyWindow("normalized");
+                cvDestroyWindow("Bin");
         }
         else if (mode == 2) //ОНХЯЙ ОН ЙБЮДПЮРС
 
         {
                 while(true)
                 {
-                        // ОНКСВЮЕЛ ЙЮДП
-                    IplImage* image = cvQueryFrame( capture );
-                    //capture >> frame;
-                    //image->imageData = (char *)frame.data;
-                       //image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
-                       //VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
+                        IplImage *image = cvQueryFrame(capture);
+                        assert( image !=0 );
 
-                        //assert( image !=0 );
                         normalized = cvCloneImage( image);
-                        clock_t begin = clock();
+                        timeval beginTime;
+                        gettimeofday(&beginTime, NULL);
 
                         //ТХКЭРПЮЖХЪ
                         cvSmooth(normalized, normalized, CV_GAUSSIAN, 3, 3);
@@ -911,12 +930,16 @@ int main()
 
                         //ЛНДСКЭ НРПХЯНБЙХ ХМТНПЛЮЖХХ
 
-                        clock_t end = clock();
-                        double elapsed_secs = double(end - begin);
+                        timeval endTime;
+                        gettimeofday(&endTime, NULL);
+                        int frameSecTime = endTime.tv_sec - beginTime.tv_sec;
+                        int frameMilliSecTime = endTime.tv_usec / 1000 - beginTime.tv_usec / 1000;
+                        double elapsed_msecs = (frameSecTime * 1000 + frameMilliSecTime);
+
                         CvFont font;
                         cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.0, 2.0);
                         char buf[128];
-                        sprintf(buf, "FPS %.2f", 1000/elapsed_secs);
+                        sprintf(buf, "FPS %.2f", 1000/elapsed_msecs);
                         cvPutText(centered,  buf, cvPoint(5, centered->height - 10), &font, CV_RGB(255,0,0));
 
                         sprintf(buf, "X = %4d", -(centerPad.y - (centered->height)/2));
@@ -924,7 +947,12 @@ int main()
                         sprintf(buf, "Y = %4d", centerPad.x-(centered->width)/2);
                         cvPutText(centered,  buf, cvPoint(centered -> width - 130, centered->height - 10), &font, CV_RGB(0,255,0));
 
-                        clock_t time = clock();
+                        timeval currentTime;
+                        gettimeofday(&currentTime, NULL);
+                        int currentSecTime = currentTime.tv_sec - startTime.tv_sec;
+                        int currentMilliSecTime = currentTime.tv_usec / 1000 - startTime.tv_usec / 1000;
+                        double time = (currentSecTime * 1000) + currentMilliSecTime;
+
                         sprintf(buf, "Time %.2f sec", double(time)/1000);
                         cvPutText(centered,  buf, cvPoint(5, centered->height - 30), &font, CV_RGB(0,255,0));
                         cvPutText(centered,  "Looking for Square", cvPoint(5, 25), &font, CV_RGB(0,255,0));
@@ -958,7 +986,7 @@ int main()
                         cvReleaseImage(& centered);
                         cvReleaseImage(& filtered);
                         cvReleaseImage(& contours);
-                        cvReleaseImage(& image);
+                        cvReleaseImageHeader(& image);
 
 
                         char c = cvWaitKey(33);
@@ -971,8 +999,8 @@ int main()
                         }
                 }
                 // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
-                //cvReleaseCapture( &capture );
-                //VI.stopDevice(device1);
+                cvReleaseCapture( &capture );
+
                 // СДЮКЪЕЛ НЙМН
                 cvDestroyWindow("resized");
                 cvDestroyWindow("normalized");
@@ -982,16 +1010,11 @@ int main()
         {
                 while(true)
                 {
-                        // ОНКСВЮЕЛ ЙЮДП
-                        //image = cvCreateImage(cvSize(VI.getWidth(device1),VI.getHeight(device1)), IPL_DEPTH_8U, 3);
-                       // VI.getPixels(device1, (unsigned char *)image->imageData, false, true);
-                    //IplImage* frame = cvQueryFrame( capture );
-                    //capture >> frame;
-                    image->imageData = (char *)frame.data;
-
+                        IplImage *image = cvQueryFrame(capture);
                         assert( image !=0 );
                         normalized = cvCloneImage( image);
-                        clock_t begin = clock();
+                        timeval beginTime;
+                        gettimeofday(&beginTime, NULL);
 
                         //ТХКЭРПЮЖХЪ
                         cvSmooth(normalized, normalized, CV_GAUSSIAN, 5, 5);
@@ -1025,13 +1048,17 @@ int main()
 
                         //ЛНДСКЭ НРПХЯНБЙХ ХМТНПЛЮЖХХ
 
-                        clock_t end = clock();
-                        double elapsed_secs = double(end - begin);
+                        timeval endTime;
+                        gettimeofday(&endTime, NULL);
+                        int frameSecTime = endTime.tv_sec - beginTime.tv_sec;
+                        int frameMilliSecTime = endTime.tv_usec / 1000 - beginTime.tv_usec / 1000;
+                        double elapsed_msecs = (frameSecTime * 1000 + frameMilliSecTime);
+
                         CvFont font;
                         cvInitFont(&font, CV_FONT_HERSHEY_PLAIN, 1.0, 2.0);
                         char buf[128];
 
-                        sprintf(buf, "FPS %.2f", 1000/elapsed_secs);
+                        sprintf(buf, "FPS %.2f", 1000/elapsed_msecs);
                         cvPutText(centered,  buf, cvPoint(5, centered->height - 10), &font, CV_RGB(255,0,0));
 
                         sprintf(buf, "X = %4d", -(centerPad.y - (centered->height)/2));
@@ -1039,7 +1066,12 @@ int main()
                         sprintf(buf, "Y = %4d", centerPad.x-(centered->width)/2);
                         cvPutText(centered,  buf, cvPoint(centered -> width - 130, centered->height - 10), &font, CV_RGB(0,255,0));
 
-                        clock_t time = clock();
+                        timeval currentTime;
+                        gettimeofday(&currentTime, NULL);
+                        int currentSecTime = currentTime.tv_sec - startTime.tv_sec;
+                        int currentMilliSecTime = currentTime.tv_usec / 1000 - startTime.tv_usec / 1000;
+                        double time = (currentSecTime * 1000) + currentMilliSecTime;
+
                         sprintf(buf, "Time %.2f sec", double(time)/1000);
 
                         cvPutText(centered,  buf, cvPoint(5, centered->height - 30), &font, CV_RGB(0,255,0));
@@ -1057,7 +1089,7 @@ int main()
                         cvReleaseImage(& centered);
                         cvReleaseImage(& filtered);
                         cvReleaseImage(& contours);
-                        cvReleaseImage(& image);
+                        cvReleaseImageHeader(& image);
 
 
                         char c = cvWaitKey(33);
@@ -1076,8 +1108,8 @@ int main()
                 }
 
         // НЯБНАНФДЮЕЛ ПЕЯСПЯШ
-        //cvReleaseCapture( &capture );
-                //VI.stopDevice(device1);
+        cvReleaseCapture( &capture );
+
         // СДЮКЪЕЛ НЙМН
         cvDestroyWindow("resized");
         cvDestroyWindow("normalized");
