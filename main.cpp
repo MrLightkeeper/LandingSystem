@@ -1,6 +1,3 @@
-
-
-//#include "stdafx.h"
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -12,17 +9,7 @@
 #include <vector>
 #include <math.h>
 #include <iostream>
-
 #include <sys/time.h>
-//#include <videoInput.h>
-
-
-
-
-
-//#define _CRT_SECURE_NO_DEPRECATE
-//#define _CRT_SECURE_NO_WARNINGS
-//#pragma warning(disable : 4996)
 
 
 using namespace std;
@@ -159,7 +146,6 @@ void SquareByPoints(IplImage* _target)
     int i=0;
     int j=0;
     int objCount = 0;
-    int M[50][50];
 
     eps = 0.05;
 
@@ -279,7 +265,7 @@ void SquareByPoints(IplImage* _target)
 
 
 
-    double cx1, cx2, cy1, cy2;
+
 
     //for(i = 2; i <= objCount; i++){
     //	j=i-1;
@@ -415,7 +401,7 @@ void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
         CvSeq* contours=0;
 
         // МЮУНДХЛ ЙНМРСПШ
-        int contoursCont = cvFindContours( bin, storage,&contours,sizeof(CvContour),CV_RETR_LIST,CV_LINK_RUNS,cvPoint(0,0));
+        //int contoursCont = cvFindContours( bin, storage,&contours,sizeof(CvContour),CV_RETR_LIST,CV_LINK_RUNS,cvPoint(0,0));
 
         // ДКЪ НРЛЕРЙХ ЙНМРСПНБ
         CvFont font;
@@ -708,14 +694,20 @@ void hsvConvert(IplImage* _image, IplImage* dst, bool _manual, char _color){ //�
 int main()
 {
         CvCapture *capture = cvCreateCameraCapture(0);
-        if( !capture ) return 1;
+        if( !capture ){
+            std::cout << "Unable to read stream from specified device." << std::endl;
+            return 1;
+        }
+        else std::cout << "[i] Capture opened" << std::endl;
 
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 1024);
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 768);
+        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 1280);
+        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 720);
+
 
         double width = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
         double height = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
-        printf("[i] Resolution %.0f x %.0f\n", width, height);
+        //printf("[i] Resolution %.0f x %.0f\n", width, height);
+        std::cout << "[i] Resolution " << width << " x " << height << std::endl;
 
 
         //CvCapture *capture = cvCreateCameraCapture(0);
