@@ -310,7 +310,7 @@ void findSquare(IplImage* _image,IplImage* _target , IplImage* _color)
         CvSeq* contours=0;
 
         // МЮУНДХЛ ЙНМРСПШ
-        int contoursCont = cvFindContours( bin, storage,&contours,sizeof(CvContour),CV_RETR_LIST,CV_LINK_RUNS,cvPoint(0,0));
+        //int contoursCont = cvFindContours( bin, storage,&contours,sizeof(CvContour),CV_RETR_LIST,CV_LINK_RUNS,cvPoint(0,0));
 
 
         //CvMemStorage* storage_l = cvCreateMemStorage(0);
@@ -383,7 +383,7 @@ void findSquare(IplImage* _image,IplImage* _target , IplImage* _color)
         cvReleaseImageHeader(&bin);
 }
 
-void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
+void findCircles(IplImage* _image,IplImage* _target)
 {
         assert(_image!=0);
 
@@ -401,7 +401,7 @@ void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
         CvSeq* contours=0;
 
         // МЮУНДХЛ ЙНМРСПШ
-        //int contoursCont = cvFindContours( bin, storage,&contours,sizeof(CvContour),CV_RETR_LIST,CV_LINK_RUNS,cvPoint(0,0));
+        cvFindContours( bin, storage,&contours,sizeof(CvContour),CV_RETR_LIST,CV_LINK_RUNS,cvPoint(0,0));
 
         // ДКЪ НРЛЕРЙХ ЙНМРСПНБ
         CvFont font;
@@ -419,18 +419,17 @@ void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
             double perim = cvContourPerimeter(current);
 
             // 1/4*CV_PI = 0,079577
-            if ( area / (perim * perim) > double(0.059) && area / (perim * perim)< double(0.087) ){ // Б 10% ХМРЕПБЮКЕ
+            if ( area / (perim * perim) > 0.059 && area / (perim * perim)< 0.087 ){
 
-                //нРПХЯНБЙЮ НЙПСФМНЯРЕИ
+                // Drawing circles
                 float radius;
                 CvPoint2D32f center;
                 cvMinEnclosingCircle(current, & center, &radius);
                 double circArea = 2 * 3.14 * radius;
-
                 cvCircle(_target, cvPoint(center.x,center.y), radius, CV_RGB(255,255,255), 1, 8);
 
                 // МЮПХЯСЕЛ ЙНМРСП
-                if ((area >= 2*2) &&  abs(1 - perim / circArea) <= double(0.2))
+                if ((area >= 2*2) &&  abs(1 - perim / circArea) <= 0.2)
                 {
                     cvDrawContours(_target, current, cvScalar(255, 255, 255), cvScalar(0, 255, 0), 0, -1, 8);
                     // БШБНДХЛ ЕЦН МНЛЕП
@@ -450,7 +449,7 @@ void findCircles(IplImage* _image,IplImage* _target, IplImage* _color)
         cvReleaseImage(&bin);
 }
 
-void findCenter(IplImage* _image, IplImage* _bin, int point_num, CvPoint center)
+void findCenter(IplImage* _image, IplImage* _bin, int point_num)
 {
         centered = cvCreateImage(cvSize(_image->width, _image->height), _image -> depth, 3);
         cvCvtColor(_bin, centered, CV_GRAY2RGB);
@@ -529,7 +528,7 @@ IplImage* createBin(IplImage* _image, int _low, int _high) //аХМЮПХГЮЖ�
     return _bin;
 }
 
-void hsvConvert(IplImage* _image, IplImage* dst, bool _manual, char _color){ //оПЕНАПЮГНБЮМХЕ Б HSV ОПНЯРПЮМЯРБН
+void hsvConvert(IplImage* _image, IplImage* dst, bool _manual, char _color){ //Convert image to HSV format
 
         // НОПЕДЕКЕМХЕ ОЮПЮЛЕРПНБ ЖБЕРЮ
 
@@ -700,50 +699,35 @@ int main()
         }
         else std::cout << "[i] Capture opened" << std::endl;
 
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 1280);
-        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 720);
+
+        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH, 800);
+        cvSetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT, 600);
 
 
         double width = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_WIDTH);
         double height = cvGetCaptureProperty(capture, CV_CAP_PROP_FRAME_HEIGHT);
-        //printf("[i] Resolution %.0f x %.0f\n", width, height);
         std::cout << "[i] Resolution " << width << " x " << height << std::endl;
+        std::cout << "[i] press Esc for quit!" << std::endl;
 
 
-        //CvCapture *capture = cvCreateCameraCapture(0);
-        // VideoCapture capture(0);
-        //if (!capture.isOpened()) {
-        //     std::cout << "Unable to read stream from specified device." << std::endl;
-        //    return -1;
-        // }else std::cout << "Stream opened" << std::endl;
-
-        Mat frame;
-
-        //ДКЪ ОНХЯЙЮ ЯПЕДМЕЦН ОНКНФЕМХЪ ОКНЫЮДЙХ
+        //For searching average position of pad
         CvPoint avCenter;
         int avCount = 0;
         int aoiSize = 100;
 
+        //Preferences
 
-        //cvNamedWindow("capture", CV_WINDOW_AUTOSIZE);
-
-        printf("[i] press Esc for quit!\n\n");
-
-        bool flManHSV = false;
-        bool flManMode = 0;
-
-        //БШАНП ПЕФХЛЮ ПЮАНРШ
-        mode = 1;
+        bool flManHSV = false;  //Manual set up HSV parameters
+        bool flManMode = 0;     //Manual or automative choosing mode
+        mode = 1;               //Choose mode
 
         timeval startTime;
         gettimeofday(&startTime, NULL);
 
-        start: //This is for goto()
+        start:                  //This is for goto()
 
 
-
-
-        if (mode == 1) //ОНХЯЙ ОН ЯБЕРНДХНДЮЛ
+        if (mode == 1)          //Searching by LEDs
         {
                 while(true)
                 {
@@ -781,11 +765,15 @@ int main()
 
                         contours = cvCreateImage(cvSize(normalized->width, normalized->height), normalized -> depth, 1);
                         cvZero(contours);
-                        findCircles(filtered, contours, normalized);
+                        findCircles(filtered, contours);
+
+                        cvNamedWindow("Contours");
+                        cvShowImage("Contours", contours);
+
 
                         //ОНХЯЙ ЖЕМРПЮ
 
-                        findCenter(normalized, contours, cir_point_num, centerPad);
+                        findCenter(normalized, contours, cir_point_num);
 
                         //ЛНДСКЭ НРПХЯНБЙХ ХМТНПЛЮЖХХ
 
@@ -917,7 +905,7 @@ int main()
 
                         //ОНХЯЙ ЖЕМРПЮ
 
-                        findCenter(normalized, contours, sq_point_num, centerPad);
+                        findCenter(normalized, contours, sq_point_num);
 
 
                         //ЛНДСКЭ НРПХЯНБЙХ ХМТНПЛЮЖХХ
@@ -1036,7 +1024,7 @@ int main()
 
                         //ОНХЯЙ ЖЕМРПЮ
 
-                        findCenter(normalized, contours, cir_point_num, centerPad);
+                        findCenter(normalized, contours, cir_point_num);
 
                         //ЛНДСКЭ НРПХЯНБЙХ ХМТНПЛЮЖХХ
 
